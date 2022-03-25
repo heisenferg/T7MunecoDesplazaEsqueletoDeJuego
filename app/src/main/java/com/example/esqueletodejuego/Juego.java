@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
 import android.view.Display;
@@ -18,6 +19,7 @@ import androidx.annotation.NonNull;
 
 public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap bmpMapa;
+    private Bitmap mario;
     private SurfaceHolder holder;
     private BucleJuego bucle;
 
@@ -41,6 +43,12 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private int xMario=0, yMario=0;
     private int mapaH, mapaW;
     private int destMapaY;
+    private int estado_mario=0;
+    private int puntero_mario_sprite =0;
+    private int marioW, marioH;
+
+
+
 
 
     public Juego(Activity context) {
@@ -59,6 +67,7 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         maxX = mdispSize.x;
         maxY = mdispSize.y;
     }
+
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -93,20 +102,29 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         if (xMario==1080){
             bucle.ejecutandose = false;
         }
+        marioW = mario.getWidth();
+        marioH = mario.getHeight();
+
         contadorFrames++;
         destMapaY = (maxY-mapaH)/2;
         //Posición marioY
         yMario = destMapaY+mapaH*9/10-mario.getHeight()*2/3;
+        puntero_mario_sprite = marioW/21*estado_mario;
+        estado_mario++;
+
+        if (estado_mario>3){
+            estado_mario=0;
+        }
 
     }
 
     /**
      * Este método dibuja el siguiente paso de la animación correspondiente
      */
-    private Bitmap mario;
 
     public void renderizar(Canvas canvas) {
         if(canvas!=null) {
+
             Paint myPaint = new Paint();
             myPaint.setStyle(Paint.Style.STROKE);
 
@@ -115,12 +133,14 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
 
 
 
-
             //Dibujar mapa
             canvas.drawBitmap(bmpMapa, 0, destMapaY, null);
 
             //Dibujar muñeco
-            canvas.drawBitmap(mario, xMario, yMario, null);
+            //canvas.drawBitmap(mario, xMario, yMario, null);
+            //Recortar muñeco
+            canvas.drawBitmap(mario, new Rect(puntero_mario_sprite,0,puntero_mario_sprite+marioW/21, marioH*2/3),
+                    new Rect(100, yMario, 100+marioW/21, destMapaY+mapaH*9/10), null);
 
             //dibujar un texto
             myPaint.setStyle(Paint.Style.FILL);
