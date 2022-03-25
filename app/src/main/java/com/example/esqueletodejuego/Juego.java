@@ -46,6 +46,7 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private int estado_mario=0;
     private int puntero_mario_sprite =0;
     private int marioW, marioH;
+    private int contador_Frames = 0;
 
 
 
@@ -61,6 +62,7 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
 
         mapaH = bmpMapa.getHeight();
         mapaW = bmpMapa.getWidth();
+
 
        Point mdispSize = new Point();
         mdisp.getSize(mdispSize);
@@ -99,9 +101,6 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     public void actualizar() {
         xMario = xMario+1000/(bucle.MAX_FPS*3);
 
-        if (xMario==1080){
-            bucle.ejecutandose = false;
-        }
         marioW = mario.getWidth();
         marioH = mario.getHeight();
 
@@ -110,11 +109,16 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         //Posición marioY
         yMario = destMapaY+mapaH*9/10-mario.getHeight()*2/3;
         puntero_mario_sprite = marioW/21*estado_mario;
-        estado_mario++;
+        contadorFrames++;
 
-        if (estado_mario>3){
-            estado_mario=0;
+        if (contadorFrames%3==0){
+            estado_mario++;
+
+            if (estado_mario>3){
+                estado_mario=0;
+            }
         }
+
 
     }
 
