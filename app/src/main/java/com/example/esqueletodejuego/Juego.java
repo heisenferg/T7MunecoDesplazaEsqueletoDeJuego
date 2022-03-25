@@ -17,7 +17,7 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 public class Juego extends SurfaceView implements SurfaceHolder.Callback {
-    private Bitmap bmp;
+    private Bitmap bmpMapa;
     private SurfaceHolder holder;
     private BucleJuego bucle;
 
@@ -32,11 +32,15 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private static final int textoInicialx=50;
     private static final int textoInicialy=20;
 
+
     private int maxX=0;
     private int maxY=0;
     private int contadorFrames=0;
     private boolean hacia_abajo=true;
     private static final String TAG = Juego.class.getSimpleName();
+    private int xMario=0, yMario=0;
+    private int mapaH, mapaW;
+    private int destMapaY;
 
 
     public Juego(Activity context) {
@@ -44,7 +48,13 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.addCallback(this);
         Display mdisp = context.getWindowManager().getDefaultDisplay();
-        Point mdispSize = new Point();
+        bmpMapa = BitmapFactory.decodeResource(getResources(), R.drawable.mapamario);
+        mario = BitmapFactory.decodeResource(getResources(), R.drawable.mario);
+
+        mapaH = bmpMapa.getHeight();
+        mapaW = bmpMapa.getWidth();
+
+       Point mdispSize = new Point();
         mdisp.getSize(mdispSize);
         maxX = mdispSize.x;
         maxY = mdispSize.y;
@@ -78,27 +88,23 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
      * generando los nuevos estados y dejando listo el sistema para un repintado.
      */
     public void actualizar() {
-        if(x>maxX)
-            hacia_abajo=false;
+        xMario = xMario+1000/(bucle.MAX_FPS*3);
 
-        if(x==0)
-            hacia_abajo=true;
-
-
-        if(hacia_abajo) {
-            x = x + 1;
-            y = y + 1;
-        }
-        else{
-            x = x - 1;
-            y = y - 1;
+        if (xMario==1080){
+            bucle.ejecutandose = false;
         }
         contadorFrames++;
+        destMapaY = (maxY-mapaH)/2;
+        //Posición marioY
+        yMario = destMapaY+mapaH*9/10-mario.getHeight()*2/3;
+
     }
 
     /**
      * Este método dibuja el siguiente paso de la animación correspondiente
      */
+    private Bitmap mario;
+
     public void renderizar(Canvas canvas) {
         if(canvas!=null) {
             Paint myPaint = new Paint();
@@ -107,27 +113,19 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
             //Toda el canvas en rojo
             canvas.drawColor(Color.RED);
 
-            //Dibujar muñeco de android
-            bmp = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
-            canvas.drawBitmap(bmp, bmpInicialx + x, bmpInicialy + y, null);
 
-            //Cambiar color y tamaño de brocha
-            myPaint.setStrokeWidth(10);
-            myPaint.setColor(Color.BLUE);
 
-            //dibujar rectángulo de 300x300
-            canvas.drawRect(rectInicialx+x, rectInicialy+y, 300, 300, myPaint);
 
-            //dibujar óvalo y arco
-            RectF rectF = new RectF(arcoInicialx+x, arcoInicialy+y, 200, 120);
-            canvas.drawOval(rectF, myPaint);
-            myPaint.setColor(Color.BLACK);
-            canvas.drawArc(rectF, 90, 45, true, myPaint);
+            //Dibujar mapa
+            canvas.drawBitmap(bmpMapa, 0, destMapaY, null);
+
+            //Dibujar muñeco
+            canvas.drawBitmap(mario, xMario, yMario, null);
 
             //dibujar un texto
             myPaint.setStyle(Paint.Style.FILL);
             myPaint.setTextSize(40);
-            canvas.drawText("Frames ejecutados:"+contadorFrames, textoInicialx, textoInicialy+y, myPaint);
+            canvas.drawText("Frames ejecutados:"+contadorFrames, 600, 1000, myPaint);
 
         }
     }
