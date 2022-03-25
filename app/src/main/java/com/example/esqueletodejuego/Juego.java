@@ -23,7 +23,7 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder holder;
     private BucleJuego bucle;
 
-    private int x=0,y=0; //Coordenadas x e y para desplazar
+    private int x=0,y=1; //Coordenadas x e y para desplazar
 
     private static final int bmpInicialx=500;
     private static final int bmpInicialy=500;
@@ -40,14 +40,18 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
     private int contadorFrames=0;
     private boolean hacia_abajo=true;
     private static final String TAG = Juego.class.getSimpleName();
-    private int xMario=0, yMario=0;
+   // private int xMario=0, yMario=0;
     private int mapaH, mapaW;
     private int destMapaY;
     private int estado_mario=0;
     private int puntero_mario_sprite =0;
     private int marioW, marioH;
     private int contador_Frames = 0;
-
+private int yMario;
+    private float posicionMario[] = new float[2];
+    private float velocidadMario [] = new float[2];
+    private int tiempoCrucePantalla = 3;
+    private float deltaT;
 
 
 
@@ -63,11 +67,18 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         mapaH = bmpMapa.getHeight();
         mapaW = bmpMapa.getWidth();
 
+        posicionMario[x] = maxX*0.1f;
+        posicionMario[y] = destMapaY + marioH * 9/10;
+        deltaT = 1f/BucleJuego.MAX_FPS;
 
        Point mdispSize = new Point();
         mdisp.getSize(mdispSize);
         maxX = mdispSize.x;
         maxY = mdispSize.y;
+
+        velocidadMario[x] = maxX/tiempoCrucePantalla;
+        velocidadMario[y] = 0;
+
     }
 
 
@@ -99,10 +110,10 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
      * generando los nuevos estados y dejando listo el sistema para un repintado.
      */
     public void actualizar() {
-        xMario = xMario+1000/(bucle.MAX_FPS*3);
 
-        marioW = mario.getWidth();
-        marioH = mario.getHeight();
+        //Vector de velocidad
+       // xMario = xMario+mapaW/(bucle.MAX_FPS*3);
+
 
         contadorFrames++;
         destMapaY = (maxY-mapaH)/2;
@@ -110,6 +121,13 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
         yMario = destMapaY+mapaH*9/10-mario.getHeight()*2/3;
         puntero_mario_sprite = marioW/21*estado_mario;
         contadorFrames++;
+        marioW = mario.getWidth();
+        marioH = mario.getHeight();
+
+        posicionMario[x] = posicionMario[x] + deltaT * velocidadMario[x];
+        posicionMario[y] = posicionMario[y] + deltaT * velocidadMario[y];
+
+
 
         if (contadorFrames%3==0){
             estado_mario++;
@@ -117,6 +135,10 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
             if (estado_mario>3){
                 estado_mario=0;
             }
+        }
+
+        if (posicionMario[x] > maxX+(marioW/21) || posicionMario[x]<=0) {
+            velocidadMario[x] = velocidadMario[x] * -1;
         }
 
 
@@ -144,7 +166,7 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
             //canvas.drawBitmap(mario, xMario, yMario, null);
             //Recortar muñeco
             canvas.drawBitmap(mario, new Rect(puntero_mario_sprite,0,puntero_mario_sprite+marioW/21, marioH*2/3),
-                    new Rect(100, yMario, 100+marioW/21, destMapaY+mapaH*9/10), null);
+                    new Rect( (int)posicionMario[x], yMario, (int) posicionMario[x]+marioW/21, destMapaY+mapaH*9/10), null);
 
             //dibujar un texto
             myPaint.setStyle(Paint.Style.FILL);
