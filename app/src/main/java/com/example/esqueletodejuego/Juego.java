@@ -12,28 +12,21 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
-public class Juego extends SurfaceView implements SurfaceHolder.Callback {
+public class Juego extends SurfaceView implements SurfaceHolder.Callback, View.OnTouchListener {
     private Bitmap bmpMapa;
     private Bitmap mario;
     private SurfaceHolder holder;
     private BucleJuego bucle;
 
     private int x=0,y=1; //Coordenadas x e y para desplazar
-
-    private static final int bmpInicialx=500;
-    private static final int bmpInicialy=500;
-    private static final int rectInicialx=450;
-    private static final int rectInicialy=450;
-    private static final int arcoInicialx=50;
-    private static final int arcoInicialy=20;
-    private static final int textoInicialx=50;
-    private static final int textoInicialy=20;
-
 
     private int maxX=0;
     private int maxY=0;
@@ -50,8 +43,13 @@ public class Juego extends SurfaceView implements SurfaceHolder.Callback {
 private int yMario;
     private float posicionMario[] = new float[2];
     private float velocidadMario [] = new float[2];
+
+    private float gravedad [] =new float[2];
+    private float posicionInicialMario[]= new float[2];
+
     private int tiempoCrucePantalla = 3;
     private float deltaT;
+    private boolean salta = false;
 
 
 
@@ -67,14 +65,12 @@ private int yMario;
         mapaH = bmpMapa.getHeight();
         mapaW = bmpMapa.getWidth();
 
-        posicionMario[x] = maxX*0.1f;
-        posicionMario[y] = destMapaY + marioH * 9/10;
         deltaT = 1f/BucleJuego.MAX_FPS;
+
 
        Point mdispSize = new Point();
         mdisp.getSize(mdispSize);
-        maxX = mdispSize.x;
-        maxY = mdispSize.y;
+
 
         velocidadMario[x] = maxX/tiempoCrucePantalla;
         velocidadMario[y] = 0;
@@ -89,13 +85,39 @@ private int yMario;
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        // se crea la superficie, creamos el game loop
 
         // Para interceptar los eventos de la SurfaceView
         getHolder().addCallback(this);
+        Canvas c = holder.lockCanvas();
+        maxX =c.getWidth();
+        maxY = c.getHeight();
+        holder.unlockCanvasAndPost(c);
 
+        marioW = mario.getWidth();
+        marioH = mario.getHeight();
         // creamos el game loop
+
+
+        posicionInicialMario[x] = maxX*0.1f;
+
+        destMapaY = (maxY-mapaH)/2;
+
+      //  posicionMario[y] = destMapaY + marioH * 9/10;
+
+        posicionInicialMario[y]= destMapaY + (mapaH*9/10)-(marioH*2/3);
+
+        posicionMario[x]=posicionInicialMario[x];
+        posicionMario[y]=posicionInicialMario[y];
+
+        velocidadMario[x]= maxX/tiempoCrucePantalla;
+        velocidadMario[y]= -velocidadMario[x]*2;
+
+        gravedad[x] = 0f;
+        gravedad[y] = -velocidadMario[y]*2;
+
+        // se crea la superficie, creamos el game loop
         bucle = new BucleJuego(getHolder(), this);
+        setOnTouchListener(this);
 
         // Hacer la Vista focusable para que pueda capturar eventos
         setFocusable(true);
@@ -116,21 +138,24 @@ private int yMario;
 
 
         contadorFrames++;
-        destMapaY = (maxY-mapaH)/2;
         //Posición marioY
         yMario = destMapaY+mapaH*9/10-mario.getHeight()*2/3;
         puntero_mario_sprite = marioW/21*estado_mario;
         contadorFrames++;
-        marioW = mario.getWidth();
-        marioH = mario.getHeight();
 
+
+
+        //Velocidad
         posicionMario[x] = posicionMario[x] + deltaT * velocidadMario[x];
         posicionMario[y] = posicionMario[y] + deltaT * velocidadMario[y];
 
+//Gravedad
+        velocidadMario[x] = velocidadMario[x] + deltaT*gravedad[x];
+        velocidadMario[y] = velocidadMario[y] + deltaT*gravedad[y];
 
+        estado_mario++;
 
         if (contadorFrames%3==0){
-            estado_mario++;
 
             if (estado_mario>3){
                 estado_mario=0;
@@ -139,6 +164,20 @@ private int yMario;
 
         if (posicionMario[x] > maxX+(marioW/21) || posicionMario[x]<=0) {
             velocidadMario[x] = velocidadMario[x] * -1;
+        }
+
+        //Rebote
+        if(posicionMario[y]>=posicionInicialMario[y]){
+            velocidadMario[y]= -(maxX/tiempoCrucePantalla)*2;
+            posicionMario[y] = posicionInicialMario[y];
+
+        }
+
+        if(salta){
+           // bucle.ejecutandose=false;
+            velocidadMario[y]=-velocidadMario[x]*2;
+            gravedad[y]=-velocidadMario[y]*2;
+            salta = false;
         }
 
 
@@ -193,7 +232,13 @@ private int yMario;
     }
 
 
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getActionMasked()){
+            case MotionEvent.ACTION_UP:
+                salta = true;
 
-
-
+        }
+        return true;
+    }
 }
